@@ -25,7 +25,6 @@ import warnings
 import numpy as np
 
 
-
 def train(train_loader, model, criterion, scheduler, optimizer, epoch):
     start = time.time()
     losses = AverageMeter()
@@ -33,7 +32,7 @@ def train(train_loader, model, criterion, scheduler, optimizer, epoch):
     data_time = AverageMeter()
     end = time.time()
     model.train()
-    
+
     for i, (img, score_map, geo_map, training_mask) in enumerate(train_loader):
         data_time.update(time.time() - end)
 
@@ -55,7 +54,8 @@ def train(train_loader, model, criterion, scheduler, optimizer, epoch):
         end = time.time()
 
         if i % cfg.print_freq == 0:
-            print('EAST <==> TRAIN <==> Epoch: [{0}][{1}/{2}] Loss {loss.val:.4f} Avg Loss {loss.avg:.4f})\n'.format(epoch, i, len(train_loader), loss=losses))
+            print('EAST <==> TRAIN <==> Epoch: [{0}][{1}/{2}] Loss {loss.val:.4f} Avg Loss {loss.avg:.4f})\n'.format(
+                epoch, i, len(train_loader), loss=losses))
 
         save_loss_info(losses, epoch, i, train_loader)
 
@@ -69,14 +69,13 @@ def main():
     print('EAST <==> Prepare <==> DataLoader <==> Begin')
     train_root_path = os.path.abspath(os.path.join('./dataset/', 'train'))
     train_img = os.path.join(train_root_path, 'img')
-    train_gt  = os.path.join(train_root_path, 'gt')
+    train_gt = os.path.join(train_root_path, 'gt')
 
     trainset = custom_dset(train_img, train_gt)
-    train_loader = DataLoader(trainset, batch_size=cfg.train_batch_size_per_gpu*cfg.gpu,
-        shuffle=True, collate_fn=collate_fn, num_workers=cfg.num_workers)
-    print('EAST <==> Prepare <==> Batch_size:{} <==> Begin'.format(cfg.train_batch_size_per_gpu*cfg.gpu))
-    print('EAST <==> Prepare <==> DataLoader <==> Done') 
-    
+    train_loader = DataLoader(trainset, batch_size=cfg.train_batch_size_per_gpu * cfg.gpu,
+                              shuffle=True, collate_fn=collate_fn, num_workers=cfg.num_workers)
+    print('EAST <==> Prepare <==> Batch_size:{} <==> Begin'.format(cfg.train_batch_size_per_gpu * cfg.gpu))
+    print('EAST <==> Prepare <==> DataLoader <==> Done')
 
     # test datalodaer
     """
@@ -92,13 +91,13 @@ def main():
     model = model.cuda()
     init_weights(model, init_type=cfg.init_type)
     cudnn.benchmark = True
-    
+
     criterion = LossFunc()
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
     scheduler = lr_scheduler.StepLR(optimizer, step_size=10000, gamma=0.94)
-    
+
     # init or resume
-    if cfg.resume and  os.path.isfile(cfg.checkpoint):
+    if cfg.resume and os.path.isfile(cfg.checkpoint):
         weightpath = os.path.abspath(cfg.checkpoint)
         print("EAST <==> Prepare <==> Loading checkpoint '{}' <==> Begin".format(weightpath))
         checkpoint = torch.load(weightpath)
@@ -129,13 +128,12 @@ def main():
                 is_best = True
 
             state = {
-                    'epoch'      : epoch,
-                    'state_dict' : model.state_dict(),
-                    'optimizer'  : optimizer.state_dict(),
-                    'is_best'    : is_best,
-                    }
+                'epoch': epoch,
+                'state_dict': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
+                'is_best': is_best,
+            }
             save_checkpoint(state, epoch)
-
 
 
 if __name__ == "__main__":

@@ -163,8 +163,7 @@ def resnet50(pretrained=True, **kwargs):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
-        
-        #model.load_state_dict(torch.load("./resnet50-19c8e357.pth"))
+        # model.load_state_dict(torch.load("./resnet50-19c8e357.pth"))
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
     return model
 
@@ -178,9 +177,9 @@ def mean_image_subtraction(images, means=[123.68, 116.78, 103.94]):
     '''
     num_channels = images.data.shape[1]
     if len(means) != num_channels:
-      raise ValueError('len(means) must match the number of channels')
+        raise ValueError('len(means) must match the number of channels')
     for i in range(num_channels):
-        images.data[:,i,:,:] -= means[i]
+        images.data[:, i, :, :] -= means[i]
 
     return images
 
@@ -201,7 +200,7 @@ class East(nn.Module):
         self.bn3 = nn.BatchNorm2d(64)
         self.relu3 = nn.ReLU()
 
-        self.conv4 = nn.Conv2d(64, 64, 3 ,padding=1)
+        self.conv4 = nn.Conv2d(64, 64, 3, padding=1)
         self.bn4 = nn.BatchNorm2d(64)
         self.relu4 = nn.ReLU()
 
@@ -226,20 +225,20 @@ class East(nn.Module):
         self.unpool1 = nn.Upsample(scale_factor=2, mode='bilinear')
         self.unpool2 = nn.Upsample(scale_factor=2, mode='bilinear')
         self.unpool3 = nn.Upsample(scale_factor=2, mode='bilinear')
-    
-    def forward(self,images):
+
+    def forward(self, images):
         images = mean_image_subtraction(images)
         _, f = self.resnet(images)
         h = f[3]  # bs 2048 w/32 h/32
-        g = (self.unpool1(h)) #bs 2048 w/16 h/16
+        g = (self.unpool1(h))  # bs 2048 w/16 h/16
         c = self.conv1(torch.cat((g, f[2]), 1))
         c = self.bn1(c)
         c = self.relu1(c)
-        
+
         h = self.conv2(c)  # bs 128 w/16 h/16
         h = self.bn2(h)
         h = self.relu2(h)
-        g = self.unpool2(h) # bs 128 w/8 h/8
+        g = self.unpool2(h)  # bs 128 w/8 h/8
         c = self.conv3(torch.cat((g, f[1]), 1))
         c = self.bn3(c)
         c = self.relu3(c)
@@ -247,19 +246,19 @@ class East(nn.Module):
         h = self.conv4(c)  # bs 64 w/8 h/8
         h = self.bn4(h)
         h = self.relu4(h)
-        g = self.unpool3(h) # bs 64 w/4 h/4
+        g = self.unpool3(h)  # bs 64 w/4 h/4
         c = self.conv5(torch.cat((g, f[0]), 1))
         c = self.bn5(c)
         c = self.relu5(c)
-        
-        h = self.conv6(c) # bs 32 w/4 h/4
+
+        h = self.conv6(c)  # bs 32 w/4 h/4
         h = self.bn6(h)
         h = self.relu6(h)
-        g = self.conv7(h) # bs 32 w/4 h/4
+        g = self.conv7(h)  # bs 32 w/4 h/4
         g = self.bn7(g)
         g = self.relu7(g)
-        
-        F_score = self.conv8(g) #  bs 1 w/4 h/4
+
+        F_score = self.conv8(g)  # bs 1 w/4 h/4
         F_score = self.sigmoid1(F_score)
         geo_map = self.conv9(g)
         geo_map = self.sigmoid2(geo_map) * 512
@@ -267,5 +266,5 @@ class East(nn.Module):
         angle_map = self.sigmoid3(angle_map)
         angle_map = (angle_map - 0.5) * math.pi / 2
 
-        F_geometry = torch.cat((geo_map, angle_map), 1) # bs 5 w/4 w/4
+        F_geometry = torch.cat((geo_map, angle_map), 1)  # bs 5 w/4 w/4
         return F_score, F_geometry
