@@ -1,28 +1,21 @@
-import torch
-from torch.autograd import Variable
-import os
-from torch import nn
-from torch.optim import lr_scheduler
-from torch.nn.utils.rnn import pack_padded_sequence
-from torch.utils.data import DataLoader
-from torchvision import transforms
-from model import East
-from loss import *
-from data_utils import custom_dset, collate_fn
 import time
-from tensorboardX import SummaryWriter
-import config as cfg
-from utils.init import *
-from utils.util import *
-from utils.save import *
-from utils.myzip import *
+import warnings
+
+import numpy as np
 import torch.backends.cudnn as cudnn
+from torch.optim import lr_scheduler
+from torch.utils.data import DataLoader
+
+import config as cfg
+from data_utils import custom_dset, collate_fn
 from eval import predict
 from hmean import compute_hmean
-import zipfile
-import glob
-import warnings
-import numpy as np
+from loss import *
+from model import East
+from utils.init import *
+from utils.myzip import *
+from utils.save import *
+from utils.util import *
 
 
 def train(train_loader, model, criterion, scheduler, optimizer, epoch):
